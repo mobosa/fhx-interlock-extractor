@@ -1,0 +1,22 @@
+# Build artifacts
+build/
+dist/
+*.spec
+
+# Python
+__pycache__/
+*.pyc
+
+# Excel output
+联锁信息表.xlsx
+联锁信息表_v2.xlsx
+
+# Large files
+*.fhx
+*.pdf
+*.PNG
+*.png
+*.jpg
+
+# IDE
+.vscode/
