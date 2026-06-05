@@ -454,7 +454,7 @@ def generate_excel(instances, output_path):
         # 联锁
         for num in sorted(dc['i_exps'].keys()):
             exp = dc['i_exps'][num]
-            if exp and exp not in ('FALSE;', 'FALSE') and not dc['i_disable'].get(num, False):
+            if exp and exp not in ('FALSE;', 'FALSE'):
                 desc = dc['i_descs'].get(num, '')
                 state = dc['i_states'].get(num, '')
                 disable = dc['i_disable'].get(num, False)
@@ -482,7 +482,7 @@ def generate_excel(instances, output_path):
         # 模拟跟踪
         for num in sorted(dc['t_exps'].keys()):
             exp = dc['t_exps'][num]
-            if exp and exp not in ('FALSE;', 'FALSE') and not dc['t_disable'].get(num, False):
+            if exp and exp not in ('FALSE;', 'FALSE'):
                 desc = dc['t_descs'].get(num, '')
                 disable = dc['t_disable'].get(num, False)
                 hold_man = dc['t_hold_man'].get(num, False)
@@ -678,7 +678,7 @@ def generate_excel(instances, output_path):
         dc = inst['dcc_config']
         for num in sorted(dc['t_exps'].keys()):
             exp = dc['t_exps'][num]
-            if exp and exp not in ('FALSE;', 'FALSE') and not dc['t_disable'].get(num, False):
+            if exp and exp not in ('FALSE;', 'FALSE'):
                 sc(ws_at, row, 1, seq)
                 sc(ws_at, row, 2, inst['tag'])
                 sc(ws_at, row, 3, inst['plant_area'], align=l_align)

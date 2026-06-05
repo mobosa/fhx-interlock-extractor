@@ -268,6 +268,7 @@ def generate_excel(instances, output_path):
     border = Border(left=Side(style='thin'), right=Side(style='thin'),
                     top=Side(style='thin'), bottom=Side(style='thin'))
     fill_ilock = PatternFill(start_color='FCE4EC', end_color='FCE4EC', fill_type='solid')
+    fill_disabled = PatternFill(start_color='FFCCCC', end_color='FFCCCC', fill_type='solid')  # 浅红色高亮禁用行
     fill_perm = PatternFill(start_color='E8F5E9', end_color='E8F5E9', fill_type='solid')
     fill_force = PatternFill(start_color='FFF8E1', end_color='FFF8E1', fill_type='solid')
     fill_at = PatternFill(start_color='E8DAEF', end_color='E8DAEF', fill_type='solid')
@@ -303,7 +304,7 @@ def generate_excel(instances, output_path):
         all_conds = []
         for num in sorted(dc['i_exps'].keys()):
             exp = dc['i_exps'][num]
-            if exp and exp not in ('FALSE;', 'FALSE') and not dc['i_disable'].get(num, False):
+            if exp and exp not in ('FALSE;', 'FALSE'):
                 all_conds.append(('联锁', num, dc['i_descs'].get(num, ''), exp, dc['i_states'].get(num, ''),
                                   dc['i_disable'].get(num, False), dc['i_higher_mng'].get(num, False),
                                   dc['i_reset_reqd'].get(num, False), dc['i_delay_on'].get(num, 0), dc['i_delay_off'].get(num, 0)))
@@ -317,7 +318,7 @@ def generate_excel(instances, output_path):
                 all_conds.append(('强制', num, dc['f_descs'].get(num, ''), exp, dc['f_states'].get(num, ''), False, False, False, 0, 0))
         for num in sorted(dc['t_exps'].keys()):
             exp = dc['t_exps'][num]
-            if exp and exp not in ('FALSE;', 'FALSE') and not dc['t_disable'].get(num, False):
+            if exp and exp not in ('FALSE;', 'FALSE'):
                 all_conds.append(('模拟跟踪', num, dc['t_descs'].get(num, ''), exp, '',
                                   dc['t_disable'].get(num, False), False, dc['t_reset_reqd'].get(num, False),
                                   dc['t_delay_on'].get(num, 0), dc['t_delay_off'].get(num, 0)))
@@ -349,6 +350,10 @@ def generate_excel(instances, output_path):
                 sc(ws1, row, 17, dc['i_used'] if first else '')
                 sc(ws1, row, 18, dc['p_used'] if first else '')
                 sc(ws1, row, 19, dc['f_used'] if first else '')
+                # 禁用行高亮
+                if cdisable:
+                    for c in range(1, 20):
+                        ws1.cell(row=row, column=c).fill = fill_disabled
                 row += 1; first = False
             seq += 1
     ws1.freeze_panes = 'A3'; ws1.auto_filter.ref = f'A2:S{row - 1}'
@@ -370,7 +375,7 @@ def generate_excel(instances, output_path):
         cond_no = 0
         for num in sorted(dc['i_exps'].keys()):
             exp = dc['i_exps'][num]
-            if exp and exp not in ('FALSE;', 'FALSE') and not dc['i_disable'].get(num, False):
+            if exp and exp not in ('FALSE;', 'FALSE'):
                 cond_no += 1
                 sc(ws2, row, 1, seq); sc(ws2, row, 2, inst['tag']); sc(ws2, row, 3, inst['plant_area'], align=l_align)
                 sc(ws2, row, 4, cond_no); sc(ws2, row, 5, dc['i_descs'].get(num, ''), align=l_align)
@@ -454,7 +459,7 @@ def generate_excel(instances, output_path):
         cond_no = 0
         for num in sorted(dc['t_exps'].keys()):
             exp = dc['t_exps'][num]
-            if exp and exp not in ('FALSE;', 'FALSE') and not dc['t_disable'].get(num, False):
+            if exp and exp not in ('FALSE;', 'FALSE'):
                 cond_no += 1
                 sc(ws_at, row, 1, seq); sc(ws_at, row, 2, inst['tag']); sc(ws_at, row, 3, inst['plant_area'], align=l_align)
                 sc(ws_at, row, 4, cond_no); sc(ws_at, row, 5, dc['t_descs'].get(num, ''), align=l_align)
@@ -464,7 +469,12 @@ def generate_excel(instances, output_path):
                 sc(ws_at, row, 10, '是' if dc['t_hold_man'].get(num, False) else '否')
                 sc(ws_at, row, 11, '是' if dc['t_reset_reqd'].get(num, False) else '否')
                 sc(ws_at, row, 12, dc['t_delay_on'].get(num, 0)); sc(ws_at, row, 13, dc['t_delay_off'].get(num, 0))
-                sc(ws_at, row, 14, f"{dc['t_used']}/16"); row += 1; seq += 1
+                sc(ws_at, row, 14, f"{dc['t_used']}/16")
+                # 禁用行高亮
+                if dc['t_disable'].get(num, False):
+                    for c in range(1, 15):
+                        ws_at.cell(row=row, column=c).fill = fill_disabled
+                row += 1; seq += 1
     ws_at.freeze_panes = 'A3'
     if row > 3: ws_at.auto_filter.ref = f'A2:M{row - 1}'
 
@@ -479,7 +489,7 @@ def generate_excel(instances, output_path):
     row = 3; seq = 1
     for inst in sorted(instances, key=lambda x: x['tag']):
         dc = inst['dcc_config']
-        ilock_count = sum(1 for n, v in dc['i_exps'].items() if v and v not in ('FALSE;', 'FALSE') and not dc['i_disable'].get(n, False))
+        ilock_count = sum(1 for n, v in dc['i_exps'].items() if v and v not in ('FALSE;', 'FALSE'))
         perm_count = sum(1 for v in dc['p_exps'].values() if v and v not in ('FALSE;', 'FALSE'))
         sc(ws5, row, 1, seq); sc(ws5, row, 2, inst['tag']); sc(ws5, row, 3, inst['plant_area'], align=l_align)
         sc(ws5, row, 4, inst['description'], align=l_align); sc(ws5, row, 5, inst['module_class'], align=l_align)
@@ -602,15 +612,15 @@ class App(tk.Tk):
                 self.progress_var.set('正在解析FHX文件，请稍候...')
                 instances = parse_fhx(fhx)
                 self.progress_var.set(f'解析完成: {len(instances)}个模块，正在统计...')
-                total_ilock = sum(sum(1 for n, v in inst['dcc_config']['i_exps'].items()
-                                      if v and v not in ('FALSE;', 'FALSE') and not inst['dcc_config']['i_disable'].get(n, False))
+                total_ilock = sum(sum(1 for v in inst['dcc_config']['i_exps'].values()
+                                      if v and v not in ('FALSE;', 'FALSE'))
                                   for inst in instances)
                 total_perm = sum(sum(1 for v in inst['dcc_config']['p_exps'].values() if v and v not in ('FALSE;', 'FALSE'))
                                   for inst in instances)
                 total_force = sum(sum(1 for v in inst['dcc_config']['f_exps'].values() if v and v not in ('FALSE;', 'FALSE'))
                                    for inst in instances)
-                total_at = sum(sum(1 for n, v in inst['dcc_config']['t_exps'].items()
-                                   if v and v not in ('FALSE;', 'FALSE') and not inst['dcc_config']['t_disable'].get(n, False))
+                total_at = sum(sum(1 for v in inst['dcc_config']['t_exps'].values()
+                                   if v and v not in ('FALSE;', 'FALSE'))
                                for inst in instances)
                 self._log(f'[2/3] 解析完成:')
                 self._log(f'  模块实例: {len(instances)} | 联锁: {total_ilock} | 允许: {total_perm} | 强制: {total_force} | 模拟跟踪: {total_at}')
