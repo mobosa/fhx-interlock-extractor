@@ -39,6 +39,10 @@ def extract_value(lines, start):
         cv_int = re.search(r'CV=(\d+)', line)
         if cv_int:
             return int(cv_int.group(1))
+        # 匹配 CV=T 或 CV=F 等布尔值
+        cv_bool = re.search(r'CV=(T|F)\b', line)
+        if cv_bool:
+            return cv_bool.group(1)
         exp_marker = 'EXPRESSION="'
         exp_pos = line.find(exp_marker)
         if exp_pos >= 0:
@@ -110,7 +114,7 @@ def parse_fhx(filepath, progress_callback=None):
                 'f_exps': {}, 'f_descs': {}, 'f_states': {},
                 'f_disable': {}, 'f_delay_on': {}, 'f_used': 0,
                 't_exps': {}, 't_descs': {}, 't_states': {},
-                't_disable': {}, 't_reset_reqd': {}, 't_hold_man': {},
+                't_disable': {}, 't_higher_mng': {}, 't_reset_reqd': {}, 't_hold_man': {},
                 't_delay_on': {}, 't_delay_off': {}, 't_val': {}, 't_used': 0,
                 'block_type': '',
             }
@@ -146,13 +150,13 @@ def parse_fhx(filepath, progress_callback=None):
                     dcc_config['i_used'] = int(val) if isinstance(val, int) else 0; continue
                 m = re.match(r'I_DISABLE(\d+)$', attr_name)
                 if m:
-                    dcc_config['i_disable'][int(m.group(1))] = str(val).upper() == 'TRUE'; continue
+                    dcc_config['i_disable'][int(m.group(1))] = str(val).upper() in ('TRUE', 'T'); continue
                 m = re.match(r'I_HIGHER_MNG(\d+)$', attr_name)
                 if m:
-                    dcc_config['i_higher_mng'][int(m.group(1))] = str(val).upper() == 'TRUE'; continue
+                    dcc_config['i_higher_mng'][int(m.group(1))] = str(val).upper() in ('TRUE', 'T'); continue
                 m = re.match(r'I_RESET_REQD(\d+)$', attr_name)
                 if m:
-                    dcc_config['i_reset_reqd'][int(m.group(1))] = str(val).upper() == 'TRUE'; continue
+                    dcc_config['i_reset_reqd'][int(m.group(1))] = str(val).upper() in ('TRUE', 'T'); continue
                 m = re.match(r'I_DELAY_ON(\d+)$', attr_name)
                 if m:
                     dcc_config['i_delay_on'][int(m.group(1))] = val; continue
@@ -170,7 +174,7 @@ def parse_fhx(filepath, progress_callback=None):
                     dcc_config['p_used'] = int(val) if isinstance(val, int) else 0; continue
                 m = re.match(r'P_DISABLE(\d+)$', attr_name)
                 if m:
-                    dcc_config['p_disable'][int(m.group(1))] = str(val).upper() == 'TRUE'; continue
+                    dcc_config['p_disable'][int(m.group(1))] = str(val).upper() in ('TRUE', 'T'); continue
                 m = re.match(r'P_DELAY_ON(\d+)$', attr_name)
                 if m:
                     dcc_config['p_delay_on'][int(m.group(1))] = val; continue
@@ -191,7 +195,7 @@ def parse_fhx(filepath, progress_callback=None):
                     dcc_config['f_used'] = int(val) if isinstance(val, int) else 0; continue
                 m = re.match(r'F_DISABLE(\d+)$', attr_name)
                 if m:
-                    dcc_config['f_disable'][int(m.group(1))] = str(val).upper() == 'TRUE'; continue
+                    dcc_config['f_disable'][int(m.group(1))] = str(val).upper() in ('TRUE', 'T'); continue
                 m = re.match(r'F_DELAY_ON(\d+)$', attr_name)
                 if m:
                     dcc_config['f_delay_on'][int(m.group(1))] = val; continue
@@ -209,13 +213,17 @@ def parse_fhx(filepath, progress_callback=None):
                     dcc_config['t_used'] = int(val) if isinstance(val, int) else 0; continue
                 m = re.match(r'T_DISABLE(\d+)$', attr_name)
                 if m:
-                    dcc_config['t_disable'][int(m.group(1))] = str(val).upper() == 'TRUE'; continue
+                    dcc_config['t_disable'][int(m.group(1))] = str(val).upper() in ('TRUE', 'T'); continue
+                m = re.match(r'T_HIGHER_MNG(\d+)$', attr_name)
+                if m:
+                    dcc_config['t_higher_mng'][int(m.group(1))] = str(val).upper() in ('TRUE', 'T')
+                    continue
                 m = re.match(r'T_RESET_REQD(\d+)$', attr_name)
                 if m:
-                    dcc_config['t_reset_reqd'][int(m.group(1))] = str(val).upper() == 'TRUE'; continue
+                    dcc_config['t_reset_reqd'][int(m.group(1))] = str(val).upper() in ('TRUE', 'T'); continue
                 m = re.match(r'T_HOLD_MAN(\d+)$', attr_name)
                 if m:
-                    dcc_config['t_hold_man'][int(m.group(1))] = str(val).upper() == 'TRUE'; continue
+                    dcc_config['t_hold_man'][int(m.group(1))] = str(val).upper() in ('TRUE', 'T'); continue
                 m = re.match(r'T_DELAY_ON(\d+)$', attr_name)
                 if m:
                     dcc_config['t_delay_on'][int(m.group(1))] = val; continue
@@ -437,8 +445,8 @@ def generate_excel(instances, output_path):
     ws_at['A1'].alignment = Alignment(horizontal='center', vertical='center')
     h_at = [('序号', 6), ('TAG', 14), ('Plant Area', 18), ('Condition No', 8), ('Description', 22),
             ('Condition Expression', 48), ('Track Value', 10), ('Disable', 7),
-            ('Hold in Manual', 13), ('Reset Required', 11), ('Delay On (s)', 10),
-            ('Delay Off (s)', 10), ('Used/Max', 10)]
+            ('Higher Managed', 12), ('Hold in Manual', 13), ('Reset Required', 11),
+            ('Delay On (s)', 10), ('Delay Off (s)', 10), ('Used/Max', 10)]
     set_header(ws_at, 2, h_at, hdr_fill_purple)
     row = 3; seq = 1
     for inst in sorted(instances, key=lambda x: x['tag']):
@@ -452,10 +460,11 @@ def generate_excel(instances, output_path):
                 sc(ws_at, row, 4, cond_no); sc(ws_at, row, 5, dc['t_descs'].get(num, ''), align=l_align)
                 sc(ws_at, row, 6, exp, align=l_align); sc(ws_at, row, 7, dc['t_val'].get(num, 0))
                 sc(ws_at, row, 8, '是' if dc['t_disable'].get(num, False) else '否')
-                sc(ws_at, row, 9, '是' if dc['t_hold_man'].get(num, False) else '否')
-                sc(ws_at, row, 10, '是' if dc['t_reset_reqd'].get(num, False) else '否')
-                sc(ws_at, row, 11, dc['t_delay_on'].get(num, 0)); sc(ws_at, row, 12, dc['t_delay_off'].get(num, 0))
-                sc(ws_at, row, 13, f"{dc['t_used']}/16"); row += 1; seq += 1
+                sc(ws_at, row, 9, '是' if dc['t_higher_mng'].get(num, False) else '否')
+                sc(ws_at, row, 10, '是' if dc['t_hold_man'].get(num, False) else '否')
+                sc(ws_at, row, 11, '是' if dc['t_reset_reqd'].get(num, False) else '否')
+                sc(ws_at, row, 12, dc['t_delay_on'].get(num, 0)); sc(ws_at, row, 13, dc['t_delay_off'].get(num, 0))
+                sc(ws_at, row, 14, f"{dc['t_used']}/16"); row += 1; seq += 1
     ws_at.freeze_panes = 'A3'
     if row > 3: ws_at.auto_filter.ref = f'A2:M{row - 1}'
 

@@ -43,6 +43,10 @@ def extract_value(lines, start):
         cv_int = re.search(r'CV=(\d+)', line)
         if cv_int:
             return int(cv_int.group(1))
+        # 布尔值 CV=T 或 CV=F
+        cv_bool = re.search(r'CV=(T|F)\b', line)
+        if cv_bool:
+            return cv_bool.group(1)
         # 表达式 EXPRESSION="..." - 可能跨多行
         # 找到 EXPRESSION=" 的位置
         exp_marker = 'EXPRESSION="'
@@ -144,7 +148,7 @@ def parse_fhx(filepath):
                 'f_exps': {}, 'f_descs': {}, 'f_states': {},
                 'f_disable': {}, 'f_delay_on': {}, 'f_used': 0,
                 't_exps': {}, 't_descs': {}, 't_states': {},
-                't_disable': {}, 't_reset_reqd': {}, 't_hold_man': {},
+                't_disable': {}, 't_higher_mng': {}, 't_reset_reqd': {}, 't_hold_man': {},
                 't_delay_on': {}, 't_delay_off': {}, 't_val': {}, 't_used': 0,
                 'block_type': '',
             }
@@ -200,19 +204,19 @@ def parse_fhx(filepath):
                 # 联锁禁用
                 m = re.match(r'I_DISABLE(\d+)$', attr_name)
                 if m:
-                    dcc_config['i_disable'][int(m.group(1))] = str(val).upper() == 'TRUE'
+                    dcc_config['i_disable'][int(m.group(1))] = str(val).upper() in ('TRUE', 'T')
                     continue
 
                 # 联锁高级管理
                 m = re.match(r'I_HIGHER_MNG(\d+)$', attr_name)
                 if m:
-                    dcc_config['i_higher_mng'][int(m.group(1))] = str(val).upper() == 'TRUE'
+                    dcc_config['i_higher_mng'][int(m.group(1))] = str(val).upper() in ('TRUE', 'T')
                     continue
 
                 # 联锁需要复位
                 m = re.match(r'I_RESET_REQD(\d+)$', attr_name)
                 if m:
-                    dcc_config['i_reset_reqd'][int(m.group(1))] = str(val).upper() == 'TRUE'
+                    dcc_config['i_reset_reqd'][int(m.group(1))] = str(val).upper() in ('TRUE', 'T')
                     continue
 
                 # 联锁接通延时
@@ -253,7 +257,7 @@ def parse_fhx(filepath):
                 # 允许禁用
                 m = re.match(r'P_DISABLE(\d+)$', attr_name)
                 if m:
-                    dcc_config['p_disable'][int(m.group(1))] = str(val).upper() == 'TRUE'
+                    dcc_config['p_disable'][int(m.group(1))] = str(val).upper() in ('TRUE', 'T')
                     continue
 
                 # 允许接通延时
@@ -300,7 +304,7 @@ def parse_fhx(filepath):
                 # 强制禁用
                 m = re.match(r'F_DISABLE(\d+)$', attr_name)
                 if m:
-                    dcc_config['f_disable'][int(m.group(1))] = str(val).upper() == 'TRUE'
+                    dcc_config['f_disable'][int(m.group(1))] = str(val).upper() in ('TRUE', 'T')
                     continue
 
                 # 强制接通延时
@@ -327,15 +331,19 @@ def parse_fhx(filepath):
                     continue
                 m = re.match(r'T_DISABLE(\d+)$', attr_name)
                 if m:
-                    dcc_config['t_disable'][int(m.group(1))] = str(val).upper() == 'TRUE'
+                    dcc_config['t_disable'][int(m.group(1))] = str(val).upper() in ('TRUE', 'T')
+                    continue
+                m = re.match(r'T_HIGHER_MNG(\d+)$', attr_name)
+                if m:
+                    dcc_config['t_higher_mng'][int(m.group(1))] = str(val).upper() in ('TRUE', 'T')
                     continue
                 m = re.match(r'T_RESET_REQD(\d+)$', attr_name)
                 if m:
-                    dcc_config['t_reset_reqd'][int(m.group(1))] = str(val).upper() == 'TRUE'
+                    dcc_config['t_reset_reqd'][int(m.group(1))] = str(val).upper() in ('TRUE', 'T')
                     continue
                 m = re.match(r'T_HOLD_MAN(\d+)$', attr_name)
                 if m:
-                    dcc_config['t_hold_man'][int(m.group(1))] = str(val).upper() == 'TRUE'
+                    dcc_config['t_hold_man'][int(m.group(1))] = str(val).upper() in ('TRUE', 'T')
                     continue
                 m = re.match(r'T_DELAY_ON(\d+)$', attr_name)
                 if m:
