@@ -20,7 +20,7 @@
 
 ## 🔍 Overview
 
-FHX Interlock Extractor is a tool designed for **Emerson DeltaV system engineers** to extract interlock information from FHX configuration files and generate structured Excel reports. It parses DeltaV FHX files to extract Permissive, Interlock, and Fault Handler configurations.
+FHX Interlock Extractor is a tool designed for **Emerson DeltaV system engineers** to extract interlock information from FHX configuration files and generate structured Excel reports. It parses DeltaV FHX files to extract Permissive, Interlock, and Force SP configurations.
 
 > 💡 Supports any FHX type (Library, Control Strategies, Setup, etc.) with automatic detection.
 
@@ -30,7 +30,7 @@ FHX Interlock Extractor is a tool designed for **Emerson DeltaV system engineers
 |---------|-------------|
 | **Permissive Extraction** | Extract all Permissive blocks with conditions and actions |
 | **Interlock Extraction** | Extract Interlock configurations with triggers and responses |
-| **Fault Handler Extraction** | Extract Fault Handler definitions and fault states |
+| **Force SP Extraction** | Extract Force SP definitions and fault states |
 | **Excel Export** | Generate structured Excel with separate sheets for each type |
 | **GUI Interface** | Modern Apple-style GUI for easy operation |
 | **CLI Support** | Command-line interface for batch processing |
@@ -88,7 +88,7 @@ The exported Excel contains worksheets:
 |-------|---------|
 | **Permissive** | Permissive block definitions with conditions |
 | **Interlock** | Interlock configurations with triggers |
-| **Fault Handler** | Fault Handler definitions and states |
+| **Force SP** | Force SP definitions and states |
 
 ## 🛠️ Build Executable
 
