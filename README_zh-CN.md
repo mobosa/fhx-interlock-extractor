@@ -1,6 +1,5 @@
 <div align="center">
 
-<img src="exp_logo.ico" width="80" alt="FHX Interlock Extractor">
 
 # FHX Interlock Extractor
 
